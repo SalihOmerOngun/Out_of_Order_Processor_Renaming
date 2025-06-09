@@ -1,0 +1,51 @@
+/////////////////////////////// 3 Haziran 2025 ////////////////////////////////////////////////////////
+busy table instcution commit edilirse rd' adresini sontaki instructionlar için ready yapsın. normalde issue queue de işi bitince ready yapıyorudk ama burada commit edilip edilmediğine göre demiş. 
+bir tane free list yap. burada öneden mesela rd si x1 olan komut gelid sonra tekrar geldi rd si x1 olan komut geldi. eski pyhsical adres free olsun.
+
+/////////////////////////////// 4 Haziran 2025 /////////////////////////////////////////////////////////
+                            Free List boşaltmak
+mul x4, x2, x1	
+addi x2, x0,4	
+lw x3, x0(0)	
+add x7,x0,x30
+add x5, x4, x2	
+mul x2, x3, x0	
+xor x6, x0, x2	
+sub x4, x9, x2	
+
+böyle bir senaryoda addi x2 de x2 = p2 dedin. addi komutu commit oldu. sende p2 yi free yaptın. sonra x7'ye de p2 verdin. bu sefet add x5 geldi ve x2 için p2 yi kullandın yanlış sonuç alacaskın.
+
+
+mul x4, x2, x1	
+addi x2, x0,4	
+lw x3, x0(0)	
+add x7,x0,x30
+add x5, x3, x2	
+mul x2, x3, x0	
+xor x6, x0, x2	
+sub x4, x9, x2	
+
+böyle bir senaryoda addi x2 de x2 = p2 dedin. addi komutu commit oldu. ama p2 yi free yapmadın. mul x2 gelince x2 = p6 dedin. p2 yi free yaptın. add x5, x3 yüzünden cache miss oldu.
+sonra xor x6 geldi decode a ona p2 verdin. sonra add x5 çözüldü x2 için p2 kullancaksın çünkü issue queue de öyle yazıyor. ama p2 x6'nın o yüzden yine yanlış sonuç aldın.
+
+en fazla 64 tane yeni prf için gönderim yapılabilir. çünkü 64 register var
+
+
+//////////////////////////// 5 Haziran 2025 ////////////////////////////////////////////////////////
+
+p_commit geldiğinde valid 1 olması yeter mi commit etmek için ready de olması gerekiyor mu (testbench te p_commit olunca ready sinyaline bakmamış, valid ise busy table da ready demiş. o yüzden commit'in ready olmasına gerek yok)
+her şey düzgün çalışırsa for yerine fifo yap free table için
+
+tesbenchte previous adresi tutan bir şey yok free list boşlamıyor o yüzden. Abdullatif abiye sor. ref_counter bununla alakalı olabilir bakarsın
+bir de otomatik kısımda 1 ns sonra rinstr  oluştuğu varsayılmış bu yanlış değil mi. rinstr clk bağlı sonuç vermesi gerekmez mi bunu da sor Abdullatif abiye 
+
+//////////////////////////// 6 Haziran 2025 ///////////////////////////////////////////////////////////////
+
+prev_adres ve commit olmada sıkıntı var(fifo için)
+
+////////////////////////// 7 Haziran 2025 //////////////////////////////////////////////////////////////
+
+ref_counter rin'den gelen rd bir yerde rs olarak kullanılıyor mu diye bakıyor.
+read_map de rin'den gelen rd commit edilmiş mi diye bakıyor. hem ready_map hemde ref_couter da sıkıntı yok ise rd için sıkıntı çıkarmıyor
+bu aslında free_list boşaltılmasını da kontrol ediyor. ben aynı rd yi kullanan prf commit olunca free yapıyorum. o ise hem kendi commit olduysa hemde rd'yi rs olarak kullanan yoksa free yapıyor.
+aslında o bana göre biraz daha erken free yapmış oluyor. tabi testbenche rd yi ben gönderidğim için free olmuş oluyor bana sıkıntı çıkarmıyor.
